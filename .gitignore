@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Local output and logs
+output_dir/
+logs/
+*.log
+
+# Temp / large input
+*.fasta
+*.fasta.gz
+*.tar.gz
+*.bin
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Cython build (in demo/dna_fountain)
+demo/dna_fountain/build/
+demo/dna_fountain/cython_debug/
+demo/dna_fountain/*.c
+
+# Compiled demo outputs
+demo/demo1/input_file/
+demo/demo1/output_file/
+demo/demo1/iec_corrected.txt
+demo/demo1/iec_analysis_result.txt
+demo/demo1/*.fasta
+demo/demo1/sequencing_data/

@@ -1,0 +1,21 @@
+# Core DNATerra Python dependencies
+numpy
+scipy
+pysam
+matplotlib
+Cython
+biopython
+reedsolo
+tqdm
+
+# External command-line dependencies. The following commands show one possible way to install them:
+conda install numpy biopython -y
+conda install scipy -y
+conda install -c bioconda seqkit -y
+conda install -c bioconda pysam
+conda install -c conda-forge matplotlib -y
+conda install cython -y
+sudo apt install gcc python3-dev -y
+conda install -c conda-forge reedsolo -y
+conda install -c conda-forge tqdm -y
+sudo apt install cd-hit -y
