@@ -2,26 +2,34 @@
 # Self-update simulator usage example for DNATerra workflow
 #   - Paired-end: fastp merge + bwa mem + samtools + statistics
 #   - Single-end:  bwa mem + samtools + statistics
-# Usage: run from dnaterra/input_dir, e.g.:
-#   cd /path/to/dnaterra/input_dir && bash self_update_simulator_usage_example.sh
+# Usage: run from anywhere inside the dnaterra repository, e.g.:
+#   cd /path/to/dnaterra && bash input_dir/self_update_simulator_usage_example.sh
+#
+# The script auto-detects its location and resolves all paths relative to
+# the repository root, so it works regardless of where you invoke it from.
 
 set -e
 
 # ============================================================================
 # User inputs
 # ============================================================================
+# Resolve script directory (works when run from anywhere as long as this file
+# stays inside the input_dir of the dnaterra repository)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DNATERRA_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Paired-end inputs
-PE_REF="/path/to/reference.fasta"
-PE_R1="/path/to/sample_R1.fastq"
-PE_R2="/path/to/sample_R2.fastq"
+PE_REF="${DNATERRA_ROOT}/input_dir/test.fasta"
+PE_R1="${DNATERRA_ROOT}/input_dir/test_1.fq"
+PE_R2="${DNATERRA_ROOT}/input_dir/test_2.fq"
 
 # Single-end inputs
-SE_REF="/path/to/reference.fasta"
-SE_READS="/path/to/sample.fastq"
+SE_REF="${DNATERRA_ROOT}/input_dir/test.fasta"
+SE_READS="${DNATERRA_ROOT}/input_dir/test_1.fq"
 
 # Output directories
-PE_OUT="/path/to/output/paired_end"
-SE_OUT="/path/to/output/single_end"
+PE_OUT="${DNATERRA_ROOT}/output/paired_end"
+SE_OUT="${DNATERRA_ROOT}/output/single_end"
 
 # ============================================================================
 # Threads
