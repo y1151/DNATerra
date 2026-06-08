@@ -15,8 +15,8 @@ MODE="${1:-all}"
 
 case "$MODE" in
     all)
-        "$0" normal
-        "$0" simple
+        bash "$0" normal
+        bash "$0" simple
         ;;
 
     normal)

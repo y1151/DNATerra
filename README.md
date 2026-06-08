@@ -19,9 +19,15 @@ These are typical use cases rather than fixed limits.
 
 DNATerra currently targets Linux systems. On Windows, use WSL2 or a Linux environment.
 
-Python dependencies are listed in `requirements.txt`. External command-line tools used by the demo or statistics workflow should be installed as needed.
+Python dependencies can be installed according to the reference commands in `requirements.txt`. External command-line tools used by the demo or statistics workflow should be installed as needed.
 
 ## Quick Start
+
+If you download the GitHub source archive, enter the extracted `DNATerra-main` directory before running the commands below:
+
+```bash
+cd DNATerra-main
+```
 
 Run both normal mode and simple mode:
 

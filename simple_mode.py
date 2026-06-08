@@ -579,6 +579,8 @@ def parse_read_error_file(read_error_path: str, expanded_index: np.ndarray, tota
         indels.sort(key=lambda x: (-x['pos'], x['line_no']))
         errors_by_expanded_idx[idx] = s_list + indels
 
+    return errors_by_expanded_idx
+
 
 
 
@@ -602,6 +604,8 @@ def build_expanded_read_index(ref_copy_map: Dict[int, int], num_ref_seqs: int) -
 
     if pos != total_expanded_reads:
         raise RuntimeError(f"build_expanded_read_index internal error: pos={pos} != total_expanded_reads={total_expanded_reads}")
+
+    return total_expanded_reads, expanded_index
 
 
 

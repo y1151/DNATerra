@@ -4,6 +4,7 @@
 
 import sys
 import os
+import importlib.util
 from pathlib import Path
 import logging
 import time
@@ -38,10 +39,23 @@ logger = setup_logging()
 # which sets __package__ but __name__ becomes "__mp_main__", so we still take the absolute import branch)
 if __package__ is None or __name__ in ("__main__", "__mp_main__"):
     # Direct script execution (python main.py) or runpy.run_path, use absolute imports
-    # Add project root to Python path
-    _project_root = Path(__file__).parent.parent
+    # Add project parent to Python path. If the source directory is not named
+    # "dnaterra" (for example GitHub zip extracts to DNATerra-main), register the
+    # current directory as the dnaterra package for this process.
+    _package_root = Path(__file__).resolve().parent
+    _project_root = _package_root.parent
     if str(_project_root) not in sys.path:
         sys.path.insert(0, str(_project_root))
+    if importlib.util.find_spec("dnaterra") is None:
+        _package_init = _package_root / "__init__.py"
+        _spec = importlib.util.spec_from_file_location(
+            "dnaterra",
+            _package_init,
+            submodule_search_locations=[str(_package_root)],
+        )
+        _module = importlib.util.module_from_spec(_spec)
+        sys.modules["dnaterra"] = _module
+        _spec.loader.exec_module(_module)
     
     from dnaterra import (
         # Configuration

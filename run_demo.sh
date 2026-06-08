@@ -37,11 +37,11 @@ echo "      input: $DEMO_DIR/input_file.tar.gz ($(stat -c%s $DEMO_DIR/input_file
 # ---------------------------------------------------------------------------
 echo ""
 echo "[2/7] DNA fountain encoding..."
-cd dna_fountain
+cd demo/dna_fountain
 python setup.py build_ext --inplace 2>&1 | tail -n1
-cd ..
+cd ../..
 ORIG_MD5=$(md5sum "$DEMO_DIR/input_file.tar.gz" | awk '{print $1}')
-python dna_fountain/encode.py --file_in "$DEMO_DIR/input_file.tar.gz" \
+python demo/dna_fountain/encode.py --file_in "$DEMO_DIR/input_file.tar.gz" \
     --size 32 -m 4 --gc 0.10 --rs 10 --delta 0.5 \
     --c_dist 0.8 --alpha 0.36 --out "$DEMO_DIR/encoded.fasta"
 SEQ_LEN=$(sed -n '2p' "$DEMO_DIR/encoded.fasta" | tr -d '\n' | wc -c)
@@ -96,7 +96,7 @@ echo "      corrected: $DEMO_DIR/iec_corrected.txt"
 echo ""
 echo "[6/7] Fountain decoding..."
 CHUNKS=$(python3 -c "import math; print(math.ceil($SIZE/32))")
-python dna_fountain/decode.py \
+python demo/dna_fountain/decode.py \
     -f "$DEMO_DIR/iec_corrected.txt" \
     -n $CHUNKS --rs 10 --gc 0.10 -m 4 --delta 0.5 --c_dist 0.8 \
     --out "$DEMO_DIR/output_decoded.tar.gz"
