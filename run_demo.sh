@@ -1,117 +1,118 @@
 #!/bin/bash
 # =============================================================================
-# DNATerra demo — end-to-end DNA storage pipeline
-# encoding → DNATerra simulation → IEC correction → decode → verify
-#
-# Requirements:
-#   pip install -e .
-#   conda install -c bioconda seqkit cd-hit -y
-#   pip install -e ".[fountain]"       # reedsolo + cython
+# DNATerra demo: end-to-end DNA storage pipeline
+# encoding -> DNATerra simulation -> IEC correction -> decode -> verify
 # =============================================================================
 
 set -e
 cd "$(dirname "$0")"
 
-DEMO_DIR="demo1"
-WORKERS=4
+DEMO_DIR="demo/demo1"
+INPUT_TAR="$DEMO_DIR/input_file.tar.gz"
+ENCODED_FASTA="$DEMO_DIR/input_file.tar.gz.fasta"
+SIM_OUT="$DEMO_DIR/sequencing_data"
+SIM_FASTA="$SIM_OUT/output/input_file.tar.gz_merged.fasta"
+CLUSTER_FASTA="$DEMO_DIR/sequencing_data_clustered.fasta"
+IEC_OUT="$DEMO_DIR/iec_corrected_sequences.txt"
+DECODED_TAR="$DEMO_DIR/output_file/input_file.tar.gz"
+WORKERS=24
 
 echo "============================================"
 echo "DNATerra demo: encoding + sim + IEC + decode"
 echo "============================================"
 
-# ---------------------------------------------------------------------------
-# 1. Generate test input
-# ---------------------------------------------------------------------------
-echo ""
-echo "[1/7] Generating test input..."
-mkdir -p "$DEMO_DIR/input_file"
-dd if=/dev/urandom of="$DEMO_DIR/input_file/test.bin" bs=512 count=10 2>/dev/null
-tar -czvf "$DEMO_DIR/input_file.tar.gz" -C "$DEMO_DIR" input_file
-SIZE=$(stat -c%s "$DEMO_DIR/input_file.tar.gz")
-ALIGNED=$(( (SIZE + 511) / 512 * 512 ))
-truncate -s "$ALIGNED" "$DEMO_DIR/input_file.tar.gz"
-echo "      input: $DEMO_DIR/input_file.tar.gz ($(stat -c%s $DEMO_DIR/input_file.tar.gz) bytes)"
+mkdir -p "$DEMO_DIR/output_file"
 
-# ---------------------------------------------------------------------------
-# 2. DNA fountain encoding
-# ---------------------------------------------------------------------------
 echo ""
-echo "[2/7] DNA fountain encoding..."
+echo "[setup] Packing input files..."
+tar -czvf "$INPUT_TAR" -C "$DEMO_DIR" input_file
+SIZE=$(stat --format="%s" "$INPUT_TAR")
+PADDED_SIZE=$(( (SIZE + 511) / 512 * 512 ))
+if [ "$SIZE" -ne "$PADDED_SIZE" ]; then
+    echo "[setup] Padding $INPUT_TAR from $SIZE to $PADDED_SIZE bytes"
+    truncate -s "$PADDED_SIZE" "$INPUT_TAR"
+    SIZE=$PADDED_SIZE
+fi
+ORIG_MD5=$(md5sum "$INPUT_TAR" | awk '{print $1}')
+echo "      input: $INPUT_TAR ($SIZE bytes)"
+
+echo ""
+echo "[setup] Building DNA Fountain Cython extensions..."
 cd demo/dna_fountain
-python setup.py build_ext --inplace 2>&1 | tail -n1
+python3 setup.py build_ext --inplace
 cd ../..
-ORIG_MD5=$(md5sum "$DEMO_DIR/input_file.tar.gz" | awk '{print $1}')
-python demo/dna_fountain/encode.py --file_in "$DEMO_DIR/input_file.tar.gz" \
-    --size 32 -m 4 --gc 0.10 --rs 10 --delta 0.5 \
-    --c_dist 0.8 --alpha 0.36 --out "$DEMO_DIR/encoded.fasta"
-SEQ_LEN=$(sed -n '2p' "$DEMO_DIR/encoded.fasta" | tr -d '\n' | wc -c)
-echo "      encoded: $DEMO_DIR/encoded.fasta ($(grep -c '^>' $DEMO_DIR/encoded.fasta) reads, len=$SEQ_LEN)"
 
-# ---------------------------------------------------------------------------
-# 3. DNATerra simulation
-# ---------------------------------------------------------------------------
 echo ""
-echo "[3/7] DNATerra simulation (depth=6, PCR_75c_Twist_GCall)..."
-python main.py \
-    -i "$DEMO_DIR/encoded.fasta" \
-    -o "$DEMO_DIR/sequencing_data" \
-    --method PCR_75c_Twist_GCall \
-    --target-read-depth 6 --drop-rate 0.0027 \
-    --dist normal --cv 0.351 --error-rate 10.27 0.048 0.633 \
-    --num-workers $WORKERS --chunk-size 100000 \
-    --shuffle n --merge-files y --stats y \
-    --random-seed 42
+echo "[1/6] DNA fountain encoding..."
+time python3 demo/dna_fountain/encode.py \
+    --file_in "$INPUT_TAR" \
+    --size 32 -m 4 --gc 0.10 --rs 10 --delta 0.5 \
+    --c_dist 0.8 --alpha 0.36 \
+    --out "$ENCODED_FASTA"
 
-SIM_FASTA=$(ls "$DEMO_DIR/sequencing_data/output/"*.fasta 2>/dev/null | head -1)
+SEQ_LEN=$(sed -n '2p' "$ENCODED_FASTA" | tr -d '\n' | wc -c)
+echo "      encoded: $ENCODED_FASTA ($(grep -c '^>' "$ENCODED_FASTA") reads, len=$SEQ_LEN)"
+
+echo ""
+echo "[2/6] DNATerra simulation..."
+time python main.py \
+    -i "$ENCODED_FASTA" \
+    -o "$SIM_OUT" \
+    --method PCR_75c_Twist_GCall \
+    --target-read-depth 6 \
+    --drop-rate 0.0027 \
+    --dist normal \
+    --cv 0.350958 \
+    --error-rate 10.270 0.048 0.633 \
+    --num-workers "$WORKERS" \
+    --chunk-size 100000 \
+    --use-kmer y \
+    --shuffle n \
+    --merge-files y \
+    --stats y \
+    --random-seed 42 \
+    --timestamp-suffix n
+
 echo "      simulated: $SIM_FASTA"
 
-# ---------------------------------------------------------------------------
-# 4. cd-hit clustering
-# ---------------------------------------------------------------------------
 echo ""
-echo "[4/7] cd-hit clustering..."
-cd-hit-est -i "$SIM_FASTA" \
-    -o "$DEMO_DIR/clustered.fasta" \
-    -c 0.92 -n 8 -T $WORKERS -M 6000 -d 0
-echo "      clusters: $(grep -c '^>' $DEMO_DIR/clustered.fasta) reads"
+echo "[3/6] cd-hit clustering..."
+time cd-hit-est \
+    -i "$SIM_FASTA" \
+    -o "$CLUSTER_FASTA" \
+    -c 0.92 -n 8 -T "$WORKERS" -M 6000 -d 0
+echo "      clusters: $(grep -c '^>' "$CLUSTER_FASTA") reads"
 
-# ---------------------------------------------------------------------------
-# 5. IEC correction
-# ---------------------------------------------------------------------------
 echo ""
-echo "[5/7] IEC correction..."
-python demo/iec/iec_correction_cdhitest.py \
+echo "[4/6] IEC correction..."
+time python demo/iec/iec_correction_cdhitest.py \
     -f "$SIM_FASTA" \
-    -c "$DEMO_DIR/clustered.fasta.clstr" \
-    -l $SEQ_LEN \
-    -o "$DEMO_DIR/iec_corrected.txt" \
-    -s 2 -ws 6 -cl 5 -ct 3 -t $WORKERS \
-    --hamming-threshold 5 --z-threshold 5 \
-    --batch-clusters 1000
-echo "      corrected: $DEMO_DIR/iec_corrected.txt"
+    -c "$CLUSTER_FASTA.clstr" \
+    -l "$SEQ_LEN" \
+    -o "$IEC_OUT" \
+    -s 2 -ws 6 -cl 5 -ct 3 -t "$WORKERS" \
+    --batch-clusters 1000 \
+    --hamming-threshold 5 \
+    --z-threshold 5
+echo "      corrected: $IEC_OUT"
 
-# ---------------------------------------------------------------------------
-# 6. Fountain decode
-# ---------------------------------------------------------------------------
 echo ""
-echo "[6/7] Fountain decoding..."
-CHUNKS=$(python3 -c "import math; print(math.ceil($SIZE/32))")
-python demo/dna_fountain/decode.py \
-    -f "$DEMO_DIR/iec_corrected.txt" \
-    -n $CHUNKS --rs 10 --gc 0.10 -m 4 --delta 0.5 --c_dist 0.8 \
-    --out "$DEMO_DIR/output_decoded.tar.gz"
-DECODED_MD5=$(md5sum "$DEMO_DIR/output_decoded.tar.gz" | awk '{print $1}')
-echo "      decoded: $DEMO_DIR/output_decoded.tar.gz"
+echo "[5/6] Fountain decoding..."
+CHUNKS=$(python3 -c "import math; S=$SIZE; print(math.ceil(S/32))")
+time python demo/dna_fountain/decode.py \
+    -f "$IEC_OUT" \
+    -n "$CHUNKS" \
+    --rs 10 --gc 0.10 -m 4 --delta 0.5 --c_dist 0.8 \
+    --out "$DECODED_TAR"
+DECODED_MD5=$(md5sum "$DECODED_TAR" | awk '{print $1}')
+echo "      decoded: $DECODED_TAR"
 
-# ---------------------------------------------------------------------------
-# 7. Verify
-# ---------------------------------------------------------------------------
 echo ""
-echo "[7/7] Verification..."
+echo "[6/6] Verification..."
 if [ "$ORIG_MD5" = "$DECODED_MD5" ]; then
-    echo "      PASS — MD5 match: $ORIG_MD5"
+    echo "      PASS - MD5 match: $ORIG_MD5"
 else
-    echo "      FAIL — original: $ORIG_MD5, decoded: $DECODED_MD5"
+    echo "      FAIL - original: $ORIG_MD5, decoded: $DECODED_MD5"
     exit 1
 fi
 
