@@ -98,12 +98,6 @@ DNATerra has been benchmarked at large scale:
 
 Throughput is reported as generated DNA bases per second.
 
-## Third-party Code
-
-The end-to-end demo includes DNA-Fountain code under `demo/dna_fountain/`. This third-party component is distributed under GPLv3-or-later. See `demo/dna_fountain/COPYING`, `demo/dna_fountain/NOTICE.md` and `THIRD_PARTY_NOTICES.md`.
-
-DNATerra's own code is distributed under the license in `LICENSE`, except for third-party components that carry their own licenses.
-
 ## Statistics and Noise-profile Update
 
 To extract statistics from new sequencing data and update a noise profile, edit the paths in the script and run it:
@@ -148,6 +142,12 @@ python main.py \
   --random-seed 42 \
   --timestamp-suffix n
 ```
+
+## Third-party Code
+
+The end-to-end demo includes DNA-Fountain code under `demo/dna_fountain/`. This third-party component is distributed under GPLv3-or-later. See `demo/dna_fountain/COPYING`, `demo/dna_fountain/NOTICE.md` and `THIRD_PARTY_NOTICES.md`.
+
+DNATerra's own code is distributed under the license in `LICENSE`, except for third-party components that carry their own licenses.
 
 ## Citation
 
