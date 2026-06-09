@@ -44,6 +44,8 @@ bash run_simulation.sh simple
 
 The input FASTA must use a strict two-line format: one identifier line followed by one sequence line. All reference sequences should have the same length and contain only `A`, `T`, `C` and `G`.
 
+Note: `--method` selects one empirical noise profile at a time. Sample names that include PCR conditions, such as `PCR_15c_Twist_GCall` or `PCR_30c_Twist_GCall`, are labels for measured datasets rather than a mechanistic PCR model. DNATerra does not infer unmeasured PCR cycles or interpolate between PCR conditions automatically; use an existing profile directly, or generate a new profile from your own sequencing data with the self-update workflow.
+
 ## Main Parameters
 
 | Argument | Meaning |
