@@ -108,7 +108,42 @@ To extract statistics from new sequencing data and update a noise profile, edit 
 bash input_dir/self_update_simulator_usage_example.sh
 ```
 
-The script includes paired-end and single-end examples.
+The script includes paired-end and single-end examples. A pair of truncated test FASTQ files (`test_1.fq`, `test_2.fq`, each 10,000 lines) and a reference FASTA (`test.fasta`) are provided in `input_dir/` for quick validation. To generate the full-size test files from a real dataset, replace the FASTQ paths in `input_dir/self_update_simulator_usage_example.sh` with your own data and remove the `_10k` suffix.
+
+After the update finishes, move the four generated `.npz` files for the sample into `input_dir/`:
+
+```bash
+mv output/paired_end/read_coverage_depth_paired_end_sample.npz input_dir/
+mv output/paired_end/per_position_error_rates_paired_end_sample.npz input_dir/
+mv output/paired_end/error_bias_paired_end_sample.npz input_dir/
+mv output/paired_end/error_bias_kmer_paired_end_sample.npz input_dir/
+```
+
+The suffix used in these filenames comes from the `--name` value passed to `sequencing_statistics.py`. For example, the paired-end example uses `--name "paired_end_sample"`, so the simulator should use `--method paired_end_sample`.
+
+The update also writes a summary table such as `output/paired_end/summary_table_paired_end_sample.txt`. Use its `DropoutRate`, `AvgReadDepth`, `CV`, `BestDistribution`, `SubRate(%)`, `InsRate(%)` and `DelRate(%)` values when you want the command line to match the updated dataset. `--error-rate` is in `10^-3 nt^-1`, so convert the three percentage columns by multiplying by 10.
+
+Example using the paired-end test update:
+
+```bash
+python main.py \
+  -i input_dir/seq_n50_l150.fasta \
+  -o output_dir/self_updated_example \
+  --method paired_end_sample \
+  --target-read-depth 1.395311 \
+  --drop-rate 0.840799 \
+  --dist gamma \
+  --cv 0.626261 \
+  --error-rate 0.879000 0.066040 2.288580 \
+  --num-workers 8 \
+  --chunk-size 100000 \
+  --use-kmer y \
+  --shuffle n \
+  --merge-files y \
+  --stats y \
+  --random-seed 42 \
+  --timestamp-suffix n
+```
 
 ## Citation
 

@@ -62,7 +62,7 @@ if [ -n "$PE_R1" ] && [ -n "$PE_R2" ] && [ -f "$PE_R1" ] && [ -f "$PE_R2" ]; the
 
     samtools index "$PE_OUT/aligned_sorted.bam"
 
-    python3 sequencing_statistics.py \
+    python3 "$SCRIPT_DIR/sequencing_statistics.py" \
         --bam "$PE_OUT/aligned_sorted.bam" \
         --ref "$PE_REF" \
         --name "paired_end_sample" \
@@ -88,7 +88,7 @@ if [ -n "$SE_READS" ] && [ -f "$SE_READS" ]; then
 
     samtools index "$SE_OUT/aligned_sorted.bam"
 
-    python3 sequencing_statistics.py \
+    python3 "$SCRIPT_DIR/sequencing_statistics.py" \
         --bam "$SE_OUT/aligned_sorted.bam" \
         --ref "$SE_REF" \
         --name "single_end_sample" \
