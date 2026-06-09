@@ -46,6 +46,8 @@ The input FASTA must use a strict two-line format: one identifier line followed 
 
 Note: `--method` selects one empirical noise profile at a time. Sample names that include PCR conditions, such as `PCR_15c_Twist_GCall` or `PCR_30c_Twist_GCall`, are labels for measured datasets rather than a mechanistic PCR model. DNATerra does not infer unmeasured PCR cycles or interpolate between PCR conditions automatically; use an existing profile directly, or generate a new profile from your own sequencing data with the self-update workflow.
 
+The built-in profiles in `input_dir/` come from three high-throughput chip-based synthesis platforms followed by high-throughput next-generation sequencing. They cover full reading, random access, several PCR-cycle conditions and aging-time conditions. See `input_dir/README.md` for the sample table and detailed definitions of read depth, recommended read-depth distributions, position-specific error rates, single-base bias and k-mer context bias.
+
 ## Main Parameters
 
 | Argument | Meaning |
@@ -123,7 +125,7 @@ mv output/paired_end/error_bias_kmer_paired_end_sample.npz input_dir/
 
 The suffix used in these filenames comes from the `--name` value passed to `sequencing_statistics.py`. For example, the paired-end example uses `--name "paired_end_sample"`, so the simulator should use `--method paired_end_sample`.
 
-The update also writes a summary table such as `output/paired_end/summary_table_paired_end_sample.txt`. Use its `DropoutRate`, `AvgReadDepth`, `CV`, `BestDistribution`, `SubRate(%)`, `InsRate(%)` and `DelRate(%)` values when you want the command line to match the updated dataset. `--error-rate` is in `10^-3 nt^-1`, so convert the three percentage columns by multiplying by 10.
+The update also writes a summary table such as `output/paired_end/summary_table_paired_end_sample.txt`. Use its `DropoutRate`, `AvgReadDepth`, `CV`, `BestDistribution`, `SubRate(10^-3 nt^-1)`, `InsRate(10^-3 nt^-1)` and `DelRate(10^-3 nt^-1)` values when you want the command line to match the updated dataset. The three error-rate columns use the same `10^-3 nt^-1` unit as `--error-rate`, so they can be passed to `--error-rate` directly.
 
 Example using the paired-end test update:
 

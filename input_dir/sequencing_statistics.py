@@ -1173,17 +1173,17 @@ def save_summary_table(results: Dict, output_dir: str, sample_name: str,
         theoretical_cv = rd['cv'] or 0.0
     cv = theoretical_cv
 
-    # Error rates as percentages (x 100 of the fractional values)
-    sub_rate = sm.get('sub_error_rate', 0.0) * 100
-    ins_rate = sm.get('ins_error_rate', 0.0) * 100
-    del_rate = sm.get('del_error_rate', 0.0) * 100
+    # Error rates in 10^-3 nt^-1 units, matching main.py --error-rate.
+    sub_rate = sm.get('sub_error_rate', 0.0) * 1000
+    ins_rate = sm.get('ins_error_rate', 0.0) * 1000
+    del_rate = sm.get('del_error_rate', 0.0) * 1000
 
     # Header
     header = (
         "SampleID\tSynthesisMethod\tSequencingPlatform\t"
         "NumRefSequences\tNumSeqReads\tRefSeqLength(bp)\t"
         "DropoutRate\tAvgReadDepth\tCV\tReadDepthRange\t"
-        "BestDistribution\tSubRate(%)\tInsRate(%)\tDelRate(%)\n"
+        "BestDistribution\tSubRate(10^-3 nt^-1)\tInsRate(10^-3 nt^-1)\tDelRate(10^-3 nt^-1)\n"
     )
 
     row = (
