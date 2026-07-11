@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # DNATerra demo: end-to-end DNA storage pipeline
-# encoding -> DNATerra simulation -> IEC correction -> decode -> verify
+# encoding -> DNATerra simulation -> CD-HIT clustering -> IEC correction -> decode -> verify
 # =============================================================================
 
 set -e
@@ -18,7 +18,7 @@ DECODED_TAR="$DEMO_DIR/output_file/input_file.tar.gz"
 WORKERS=24
 
 echo "============================================"
-echo "DNATerra demo: encoding + sim + IEC + decode"
+echo "DNATerra demo: encode + sim + CD-HIT + IEC + decode"
 echo "============================================"
 
 mkdir -p "$DEMO_DIR/output_file"

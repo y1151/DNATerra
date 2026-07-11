@@ -13,13 +13,23 @@ cd "$(dirname "$0")"
 
 MODE="${1:-all}"
 
+# Dynamically list available modes from this script
+AVAILABLE_MODES=$(grep -E '^\s+[a-zA-Z_]+)\)[[:space:]]*$' "$0" | sed 's/)//g' | tr '\n' '|' | sed 's/|$//')
+AVAILABLE_MODES="${AVAILABLE_MODES%|all}"  # remove leading 'all|' since it's the default
+
 case "$MODE" in
     all)
         bash "$0" normal
+        echo ""
+        echo "========================================"
+        echo ""
         bash "$0" simple
         ;;
 
     normal)
+        echo ""
+        echo ">>> Running: NORMAL mode"
+        echo ""
         python main.py \
             -i input_dir/seq_n50000_l150.fasta \
             -o output_dir \
@@ -39,6 +49,9 @@ case "$MODE" in
         ;;
 
     simple)
+        echo ""
+        echo ">>> Running: SIMPLE mode"
+        echo ""
         python main.py \
             --input input_dir/seq_n50_l150.fasta \
             --output output_dir/simple_mode \
@@ -54,7 +67,7 @@ case "$MODE" in
 
     *)
         echo "Unknown mode: $MODE"
-        echo "Usage: bash run_simulation.sh [normal|simple]"
+        echo "Available modes: ${AVAILABLE_MODES:-normal simple}"
         exit 1
         ;;
 esac
