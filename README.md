@@ -35,6 +35,12 @@ Run both normal mode and simple mode:
 bash run_simulation.sh
 ```
 
+If you encounter CRLF line-ending issues when running shell scripts, convert the script first:
+
+```bash
+dos2unix xxx.sh
+```
+
 Run one mode only:
 
 ```bash
