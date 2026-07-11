@@ -7,6 +7,9 @@ Cython
 biopython
 reedsolo
 tqdm
+bwa
+fastp
+samtools
 
 # External command-line dependencies. The following commands show one possible way to install them:
 conda install numpy biopython -y
@@ -19,3 +22,6 @@ sudo apt install gcc python3-dev -y
 conda install -c conda-forge reedsolo -y
 conda install -c conda-forge tqdm -y
 sudo apt install cd-hit -y
+conda install -c bioconda -c conda-forge bwa
+conda install -c bioconda -c conda-forge fastp
+conda install -c conda-forge -c bioconda samtools
