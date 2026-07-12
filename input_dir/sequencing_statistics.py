@@ -8,6 +8,7 @@ Single BAM read to collect all statistics, outputs: npz, tsv
 import argparse
 import os
 import re
+import warnings
 import logging
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional
@@ -196,60 +197,89 @@ def _fit_distribution_for_aic(dist_name: str, data: np.ndarray) -> tuple:
     """
     Fit distribution and return (log_likelihood, num_params).
     Returns (np.nan, 0) if fitting fails.
+
+    scipy's distribution .fit() routines occasionally emit RuntimeWarning on
+    data shapes that are hard to fit (e.g. highly skewed sequencing-depth
+    distributions). These are harmless: the failing distribution is simply
+    dropped from AIC selection, while the remaining supported distributions
+    remain available. We capture and re-emit those warnings as INFO logs so
+    the user is informed but not alarmed.
     """
     data = data[data > 0]
     if len(data) < 10:
         return np.nan, 0
 
     try:
-        if dist_name == 'lognormal':
-            mu, sigma = stats.lognorm.fit(data, floc=0)
-            loglik = np.sum(stats.lognorm.logpdf(data, s=sigma, scale=np.exp(mu)))
-            return loglik, 2
+        with warnings.catch_warnings(record=True) as wlist:
+            warnings.simplefilter('always')
+            try:
+                if dist_name == 'lognormal':
+                    mu, sigma = stats.lognorm.fit(data, floc=0)
+                    loglik = np.sum(stats.lognorm.logpdf(data, s=sigma, scale=np.exp(mu)))
+                    return loglik, 2
 
-        elif dist_name == 'gamma':
-            a, loc, b = stats.gamma.fit(data, floc=0)
-            loglik = np.sum(stats.gamma.logpdf(data, a, loc=loc, scale=b))
-            return loglik, 2
+                elif dist_name == 'gamma':
+                    a, loc, b = stats.gamma.fit(data, floc=0)
+                    loglik = np.sum(stats.gamma.logpdf(data, a, loc=loc, scale=b))
+                    return loglik, 2
 
-        elif dist_name == 'normal':
-            mu, sigma = stats.norm.fit(data)
-            loglik = np.sum(stats.norm.logpdf(data, mu, sigma))
-            return loglik, 2
+                elif dist_name == 'normal':
+                    mu, sigma = stats.norm.fit(data)
+                    loglik = np.sum(stats.norm.logpdf(data, mu, sigma))
+                    return loglik, 2
 
-        elif dist_name == 'weibull':
-            c, loc, scale = stats.weibull_min.fit(data, floc=0)
-            loglik = np.sum(stats.weibull_min.logpdf(data, c, loc=loc, scale=scale))
-            return loglik, 2
+                elif dist_name == 'weibull':
+                    c, loc, scale = stats.weibull_min.fit(data, floc=0)
+                    loglik = np.sum(stats.weibull_min.logpdf(data, c, loc=loc, scale=scale))
+                    return loglik, 2
 
-        elif dist_name == 'exponential':
-            loc, scale = stats.expon.fit(data, floc=0)
-            loglik = np.sum(stats.expon.logpdf(data, loc=loc, scale=scale))
-            return loglik, 1
+                elif dist_name == 'exponential':
+                    loc, scale = stats.expon.fit(data, floc=0)
+                    loglik = np.sum(stats.expon.logpdf(data, loc=loc, scale=scale))
+                    return loglik, 1
 
-        elif dist_name == 'nbinom':
-            n, p = stats.nbinom.fit(data, floc=0)
-            loglik = np.sum(stats.nbinom.logpmf(data, n, p))
-            return loglik, 2
+                elif dist_name == 'nbinom':
+                    n, p = stats.nbinom.fit(data, floc=0)
+                    loglik = np.sum(stats.nbinom.logpmf(data, n, p))
+                    return loglik, 2
 
-        elif dist_name == 'beta':
-            a, b_param, loc, scale = stats.beta.fit(data, floc=0)
-            loglik = np.sum(stats.beta.logpdf(data, a, b_param, loc=loc, scale=scale))
-            return loglik, 2
+                elif dist_name == 'beta':
+                    a, b_param, loc, scale = stats.beta.fit(data, floc=0)
+                    loglik = np.sum(stats.beta.logpdf(data, a, b_param, loc=loc, scale=scale))
+                    return loglik, 2
 
-        elif dist_name == 'poisson':
-            lam = np.mean(data)
-            loglik = np.sum(stats.poisson.logpmf(data.astype(int), lam))
-            return loglik, 1
+                elif dist_name == 'poisson':
+                    lam = np.mean(data)
+                    loglik = np.sum(stats.poisson.logpmf(data.astype(int), lam))
+                    return loglik, 1
 
-        elif dist_name == 'uniform':
-            a, b_param = data.min(), data.max()
-            loglik = np.sum(stats.uniform.logpdf(data, loc=a, scale=b_param - a))
-            return loglik, 2
+                elif dist_name == 'uniform':
+                    a, b_param = data.min(), data.max()
+                    loglik = np.sum(stats.uniform.logpdf(data, loc=a, scale=b_param - a))
+                    return loglik, 2
 
-        return np.nan, 0
+                return np.nan, 0
+            finally:
+                fit_warnings = [
+                    str(w.message).strip()
+                    for w in wlist
+                    if issubclass(w.category, RuntimeWarning)
+                ]
     except Exception:
         return np.nan, 0
+
+    if fit_warnings:
+        sample_msg = sorted(set(fit_warnings))[0]
+        logger.info(
+            "Distribution '%s' could not be fitted reliably for this data "
+            "(reason: data characteristics, e.g. %s). It will be excluded "
+            "from AIC selection; the remaining supported distributions are "
+            "still available and the best fit will be chosen among them.",
+            dist_name, sample_msg
+        )
+        return np.nan, 0
+
+    return np.nan, 0
 
 
 def _select_best_distribution(data: np.ndarray) -> str:
