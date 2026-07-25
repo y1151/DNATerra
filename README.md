@@ -1,17 +1,17 @@
 # DNATerra
 
-DNATerra simulates DNA storage sequencing reads from reference strands using experimentally parameterized and user-adjustable noise profiles. It supports flexible customization of sequencing depth, read-depth distribution patterns controlled by mean depth and coefficient of variation, position-dependent substitution, insertion and deletion rates, and sequence-context-dependent bias associated with GC content, homopolymers and specific motifs. DNATerra also provides parallel read generation, optional read shuffling and ground-truth output, enabling controlled benchmarking and downstream workflow analysis.
+DNATerra simulates DNA storage sequencing reads from reference strands using experimentally parameterized and user-adjustable noise profiles. It supports flexible customization of sequencing depth, read-depth distributions controlled by mean depth and coefficient of variation, position-dependent substitution, insertion, and deletion rates, and sequence-context-dependent biases associated with GC content, homopolymers, and specific motifs. DNATerra also provides parallel read generation, optional read shuffling, and ground-truth output, enabling controlled benchmarking and downstream workflow analysis.
 
 ## What can it do for DNA storage?
 
-- Use FASTA input and output to connect quickly with upstream encoding tools and downstream clustering, consensus and decoding tools.
+- Use FASTA input and output to connect quickly with upstream encoding tools and downstream clustering, consensus, and decoding tools.
 - Build end-to-end DNA storage workflows for rapid feasibility tests before wet-lab validation.
-- Explore parameter choices across workflow stages, including redundancy, read depth, clustering thresholds, consensus settings and decoding conditions.
-- Use ground-truth read-to-reference mappings, CIGAR strings and MD tags to evaluate alignment, clustering and reconstruction accuracy.
+- Explore parameter choices across workflow stages, including redundancy, read depth, clustering thresholds, consensus settings, and decoding conditions.
+- Use ground-truth read-to-reference mappings, CIGAR strings, and MD tags to evaluate alignment, clustering, and reconstruction accuracy.
 - Use ordered reads for controlled feasibility tests, or shuffled reads to evaluate performance under sequencing-like read order.
-- Adjust noise parameters independently to test robustness, such as increasing insertion, deletion, substitution, dropout or read-depth variation alone.
-- Update noise profiles from new sequencing datasets as synthesis platforms, sequencing devices or experimental protocols change.
-- Extrapolate small-scale experimental noise profiles to medium-scale simulations, iterate workflow parameters and prepare for larger-scale DNA storage experiments.
+- Adjust noise parameters independently to test robustness, such as by increasing insertion, deletion, substitution, dropout, or read-depth variation alone.
+- Update noise profiles from new sequencing datasets as synthesis platforms, sequencing devices, or experimental protocols change.
+- Extrapolate small-scale experimental noise profiles to medium-scale simulations, iterate workflow parameters, and prepare for larger-scale DNA storage experiments.
 
 These are typical use cases rather than fixed limits.
 
@@ -29,7 +29,7 @@ If you download the GitHub source archive, enter the extracted `DNATerra-main` d
 cd DNATerra-main
 ```
 
-Run both normal mode and simple mode:
+Run both normal and simple modes:
 
 ```bash
 bash run_simulation.sh
@@ -48,11 +48,11 @@ bash run_simulation.sh normal
 bash run_simulation.sh simple
 ```
 
-The input FASTA must use a strict two-line format: one identifier line followed by one sequence line. All reference sequences should have the same length and contain only `A`, `T`, `C` and `G`.
+The input FASTA must use a strict two-line format: one identifier line followed by one sequence line. All reference sequences should have the same length and contain only `A`, `T`, `C`, and `G`.
 
-Note: `--method` selects one empirical noise profile at a time. Sample names that include PCR conditions, such as `PCR_15c_Twist_GCall` or `PCR_30c_Twist_GCall`, are labels for measured datasets rather than a mechanistic PCR model. DNATerra does not infer unmeasured PCR cycles or interpolate between PCR conditions automatically; use an existing profile directly, or generate a new profile from your own sequencing data with the self-update workflow.
+Note: `--method` selects one empirical noise profile at a time. Sample names that include PCR conditions, such as `PCR_15c_Twist_GCall` or `PCR_30c_Twist_GCall`, are labels for measured datasets rather than mechanistic PCR models. DNATerra does not infer unmeasured PCR cycles or automatically interpolate between PCR conditions; use an existing profile directly, or generate a new profile from your own sequencing data with the self-update workflow.
 
-The built-in profiles in `input_dir/` come from three high-throughput chip-based synthesis platforms followed by high-throughput next-generation sequencing. They cover full reading, random access, several PCR-cycle conditions and aging-time conditions. See `input_dir/README.md` for the sample table and detailed definitions of read depth, recommended read-depth distributions, position-specific error rates, single-base bias and k-mer context bias.
+The built-in profiles in `input_dir/` come from three high-throughput chip-based synthesis platforms followed by high-throughput next-generation sequencing. They cover full reading, random access, several PCR-cycle conditions, and aging-time conditions. See `input_dir/README.md` for the sample table and detailed definitions of read depth, recommended read-depth distributions, position-specific error rates, single-base bias, and k-mer context bias.
 
 ## Main Parameters
 
@@ -65,7 +65,7 @@ The built-in profiles in `input_dir/` come from three high-throughput chip-based
 | `--drop-rate` | Strand dropout rate |
 | `--dist` | Read-depth distribution: `gamma`, `normal`, `lognormal`, `exponential`, `poisson`, `uniform`, `nbinom`, `beta`, `weibull` |
 | `--cv` | Coefficient of variation for read depth |
-| `--error-rate` | Total IDS rate or separate substitution, insertion and deletion rates, in `10^-3 nt^-1` |
+| `--error-rate` | Total IDS rate or separate substitution, insertion, and deletion rates, in `10^-3 nt^-1` |
 | `--use-kmer` | Use k-mer context bias, `y` or `n` |
 | `--shuffle` | Shuffle generated reads, `y` or `n` |
 | `--merge-files` | Merge chunk outputs, `y` or `n` |
@@ -80,8 +80,8 @@ Depending on the selected options, DNATerra writes:
 
 - simulated reads in FASTA format, either as per-chunk files or merged FASTA files
 - `ref_count.tsv`
-- `read_to_ref_ordered.tsv`, including read-to-reference mappings, CIGAR strings and MD tags
-- `read_to_ref_shuffled.tsv`, including read-to-reference mappings, CIGAR strings and MD tags when shuffled output is enabled
+- `read_to_ref_ordered.tsv`, including read-to-reference mappings, CIGAR strings, and MD tags
+- `read_to_ref_shuffled.tsv`, including read-to-reference mappings, CIGAR strings, and MD tags when shuffled output is enabled
 
 ## Demo
 
@@ -91,7 +91,7 @@ Run the end-to-end demo:
 bash run_demo.sh
 ```
 
-The script runs encoding, DNATerra simulation, clustering, correction, decoding and verification.
+The script runs encoding, DNATerra simulation, clustering, correction, decoding, and verification.
 
 ## Performance
 
@@ -104,7 +104,7 @@ DNATerra has been benchmarked at large scale:
 
 Throughput is reported as generated DNA bases per second.
 
-## Statistics and Noise-profile Update
+## Statistics and Noise Profile Update
 
 To extract statistics from new sequencing data and update a noise profile, edit the paths in the script and run it:
 
@@ -125,7 +125,7 @@ mv output/paired_end/error_bias_kmer_paired_end_sample.npz input_dir/
 
 The suffix used in these filenames comes from the `--name` value passed to `sequencing_statistics.py`. For example, the paired-end example uses `--name "paired_end_sample"`, so the simulator should use `--method paired_end_sample`.
 
-The update also writes a summary table such as `output/paired_end/summary_table_paired_end_sample.txt`. Use its `DropoutRate`, `AvgReadDepth`, `CV`, `BestDistribution`, `SubRate(10^-3 nt^-1)`, `InsRate(10^-3 nt^-1)` and `DelRate(10^-3 nt^-1)` values when you want the command line to match the updated dataset. The three error-rate columns use the same `10^-3 nt^-1` unit as `--error-rate`, so they can be passed to `--error-rate` directly.
+The update also writes a summary table, such as `output/paired_end/summary_table_paired_end_sample.txt`. Use its `DropoutRate`, `AvgReadDepth`, `CV`, `BestDistribution`, `SubRate(10^-3 nt^-1)`, `InsRate(10^-3 nt^-1)`, and `DelRate(10^-3 nt^-1)` values when you want the command line to match the updated dataset. The three error-rate columns use the same `10^-3 nt^-1` unit as `--error-rate`, so they can be passed to `--error-rate` directly.
 
 Example using the paired-end test update:
 
@@ -151,7 +151,7 @@ python main.py \
 
 ## Third-party Code
 
-The end-to-end demo includes DNA-Fountain code under `demo/dna_fountain/`. This third-party component is distributed under GPLv3-or-later. See `demo/dna_fountain/COPYING`, `demo/dna_fountain/NOTICE.md` and `THIRD_PARTY_NOTICES.md`.
+The end-to-end demo includes DNA-Fountain code under `demo/dna_fountain/`. This third-party component is distributed under GPLv3-or-later. See `demo/dna_fountain/COPYING`, `demo/dna_fountain/NOTICE.md`, and `THIRD_PARTY_NOTICES.md`.
 
 DNATerra's own code is distributed under the license in `LICENSE`, except for third-party components that carry their own licenses.
 
